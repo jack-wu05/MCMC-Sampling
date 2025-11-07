@@ -8,24 +8,20 @@ import nrpt
 
 ## Metropolis-Hastings random walk exploration kernel
 def RWMH_exploration_kernel(log_gamma, initial_x, num_iters):
-    curr_point = initial_x
-    d = 4
-    samples = np.zeros((num_iters, d))
-    
+    d = len(initial_x)
+    stepsize = 0.55
+    curr_x = initial_x
+    curr_log_gamma = log_gamma(curr_x)
+
     for i in range(num_iters):
-        new_point = np.zeros(d)
-        
-        for j in range(d):
-            new_point[j] = np.random.normal(curr_point[j], 0.6, 1)
-            
-        p = min(1, np.exp(log_gamma(new_point)-log_gamma(curr_point)))
+        new_x = curr_x + np.random.normal(loc=0, scale=stepsize, size=d)
+        new_log_gamma = log_gamma(new_x)
+        if np.log(np.random.rand()) < new_log_gamma - curr_log_gamma:
+            curr_x = new_x
+            curr_log_gamma = new_log_gamma
     
-        if np.random.rand() < p:
-            curr_point = new_point
-    
-        samples[i] = curr_point
+    return curr_x
         
-    return samples
 
 
 ## Utility for update_schedule
@@ -108,21 +104,21 @@ def kl_div(mu0, Sigma0, mu1, Sigma1):
 ## Utility for variational_PT_with_RWMH
 def vanilla_NRPT_with_RWMH(initial_state, betas, log_annealing_path, num_iterations):
     num_distributions = len(betas)
-    d = 4
+    d = len(initial_state[0])
     restarts = 0
 
     samples = []
     reject_rates = np.zeros(num_distributions-1)
     
     x_at_tminus1 = initial_state.copy()
-    x_at_t = np.empty(num_distributions, dtype=object)
+    x_at_t = [None] * num_distributions
 
     for t in range(num_iterations):
         for init in range(num_distributions):
             log_gamma = log_annealing_path[init]
 
             curr_colour = x_at_tminus1[init][1]
-            x_at_t[init] = (RWMH_exploration_kernel(log_gamma, x_at_tminus1[init][0], 20)[-1], curr_colour)
+            x_at_t[init] = (RWMH_exploration_kernel(log_gamma, x_at_tminus1[init][0], 50), curr_colour)
         
         temp_alpha_vector = np.zeros(num_distributions)
 
@@ -161,7 +157,7 @@ def variational_PT_with_RWMH(initial_state, num_chains, num_tuning_rounds, log_t
     schedule = np.linspace(0, 1, num_chains)
     curr_state = [(point, "g") for point in initial_state]
     curr_phi = initial_phi
-    d = 4
+    d = len(initial_state[0])
     
     Lambda_vs_r = []
     RestartRate_vs_r = []

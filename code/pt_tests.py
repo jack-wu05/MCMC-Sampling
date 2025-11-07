@@ -40,9 +40,14 @@ cov = np.array([
     [0.5,  0.6,  2.0,  0.7],
     [0.3,  0.4,  0.7,  1.8]
 ])
-log_target = lambda x: multivariate_normal.logpdf(np.array(x), mean=mean, cov=cov)
+inv_cov = np.linalg.inv(cov)
 
-num_chains = 5
+def log_target(x):
+    diff = x - mean
+    return -0.5 * (diff @ inv_cov @ diff)
+
+
+num_chains = 4
 initial_state = [[0.25, 0.25, 0.25, 0.25]] * num_chains
 num_tuning_rounds = 13
 initial_phi = (np.zeros(d), np.eye(d))
