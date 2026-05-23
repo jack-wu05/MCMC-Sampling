@@ -62,7 +62,7 @@ def tree_decomposition(samples):
             node1 = nodes[i]
             node2 = nodes[j]
             
-            G.add_edge(node1.label, node2.label, weight= W[i,j])
+            G.add_edge(node1.label, node2.label, weight=-W[i,j])
     
     mst = nx.minimum_spanning_tree(G, algorithm='kruskal')
         

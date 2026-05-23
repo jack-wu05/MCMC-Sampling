@@ -47,7 +47,7 @@ def log_target(x):
     return -0.5 * (diff @ inv_cov @ diff)
 
 
-num_chains = 4
+num_chains = 5
 initial_state = [[0.25, 0.25, 0.25, 0.25]] * num_chains
 num_tuning_rounds = 13
 initial_phi = (np.zeros(d), np.eye(d))
